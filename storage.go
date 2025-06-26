@@ -5,6 +5,8 @@ import (
 	"sync"
 )
 
+type StoreProducerFunc func() Storer
+
 type Storer interface {
 	Push([]byte) (int, error)
 	Fetch(int) ([]byte, error)
@@ -33,7 +35,10 @@ func (s *MemoryStore) Fetch(offset int) ([]byte, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	if len(s.data) < offset {
+	if offset < 0 {
+		return nil, fmt.Errorf("offset cannot be smaller than 0")
+	}
+	if len(s.data)-1 < offset {
 		return nil, fmt.Errorf("offset (%d) too high", offset)
 	}
 	return s.data[offset], nil
